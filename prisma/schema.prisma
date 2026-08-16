@@ -1,0 +1,96 @@
+generator client {
+  provider = "prisma-client"
+  output   = "../generated/prisma"
+}
+
+datasource db {
+  provider = "postgresql"
+}
+
+enum Role {
+  ADMIN
+  EMPLOYEE
+  PATIENT
+}
+
+model Account {
+  id        String   @id @default(cuid())
+  email     String   @unique
+  password  String
+  name      String
+  role      Role
+  patientId String?  @unique
+  patient   Patient? @relation(fields: [patientId], references: [id], onDelete: SetNull)
+  uploads   PatientFile[] @relation("UploadedBy")
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+}
+
+model Patient {
+  id           String        @id @default(cuid())
+  email        String
+  name         String
+  age          Int
+  cnic         String?
+  gender       String?
+  dob          String?
+  mobileNumber String        @unique
+  discount     Int?
+  received     Int?
+  mrnumber     String        @unique
+  infotest     String?
+  tests        PatientTest[]
+  files        PatientFile[]
+  account      Account?
+  createdAt    DateTime      @default(now())
+  updatedAt    DateTime      @updatedAt
+
+  @@index([name])
+  @@index([email])
+}
+
+model PatientTest {
+  id        String  @id @default(cuid())
+  patientId String
+  patient   Patient @relation(fields: [patientId], references: [id], onDelete: Cascade)
+  name      String
+  price     Int     @default(0)
+}
+
+model Contact {
+  id        String   @id @default(cuid())
+  email     String
+  fname     String
+  lname     String
+  message   String?
+  createdAt DateTime @default(now())
+}
+
+model Category {
+  id        String        @id @default(cuid())
+  name      String        @unique
+  files     PatientFile[]
+  createdAt DateTime      @default(now())
+  updatedAt DateTime      @updatedAt
+}
+
+model PatientFile {
+  id           String    @id @default(cuid())
+  patientId    String
+  patient      Patient   @relation(fields: [patientId], references: [id], onDelete: Cascade)
+  categoryId   String?
+  category     Category? @relation(fields: [categoryId], references: [id], onDelete: SetNull)
+  title        String
+  fileDate     DateTime
+  doctorName   String?
+  objectKey    String
+  url          String
+  contentType  String
+  size         Int
+  uploadedById String?
+  uploadedBy   Account?  @relation("UploadedBy", fields: [uploadedById], references: [id], onDelete: SetNull)
+  createdAt    DateTime  @default(now())
+
+  @@index([patientId])
+  @@index([categoryId])
+}
