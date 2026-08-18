@@ -1,8 +1,11 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
+import Link from "next/link";
+import { Search } from "lucide-react";
 import api from "@/lib/api";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { Input } from "@/components/ui/input";
 import { Skeleton } from "@/components/ui/skeleton";
 import {
   Table,
@@ -14,8 +17,9 @@ import {
 } from "@/components/ui/table";
 
 type PatientRow = {
+  id?: string;
   name?: string;
-  mobileNumber?: number;
+  mobileNumber?: string | number;
   email?: string;
   mrnumber?: string;
 };
@@ -23,6 +27,7 @@ type PatientRow = {
 export default function AllData() {
   const [allData, setAllData] = useState<PatientRow[]>();
   const [loading, setloading] = useState(false);
+  const [query, setQuery] = useState("");
 
   useEffect(() => {
     const fetchData = async () => {
@@ -41,11 +46,32 @@ export default function AllData() {
     fetchData();
   }, []);
 
+  const filtered = useMemo(() => {
+    const rows = allData ?? [];
+    const needle = query.trim().toLowerCase();
+    if (!needle) return rows;
+    return rows.filter((row) => {
+      const haystack = [row.name, row.email, row.mobileNumber, row.mrnumber]
+        .map((value) => String(value ?? "").toLowerCase())
+        .join(" ");
+      return haystack.includes(needle);
+    });
+  }, [allData, query]);
+
   return (
     <div className="container mx-auto px-4 py-10">
       <Card>
-        <CardHeader>
+        <CardHeader className="gap-4">
           <CardTitle>All patients</CardTitle>
+          <div className="relative max-w-md">
+            <Search className="absolute top-2.5 left-3 size-4 text-muted-foreground" />
+            <Input
+              value={query}
+              onChange={(event) => setQuery(event.target.value)}
+              placeholder="Filter by name, mobile, email, or MR number"
+              className="pl-9"
+            />
+          </div>
         </CardHeader>
         <CardContent>
           {loading ? (
@@ -54,7 +80,7 @@ export default function AllData() {
                 <Skeleton key={i} className="h-10 w-full" />
               ))}
             </div>
-          ) : allData && allData.length > 0 ? (
+          ) : filtered.length > 0 ? (
             <Table>
               <TableHeader>
                 <TableRow>
@@ -65,12 +91,28 @@ export default function AllData() {
                 </TableRow>
               </TableHeader>
               <TableBody>
-                {allData.map((val) => (
-                  <TableRow key={String(val.mrnumber) + val.email}>
-                    <TableCell>{val.name}</TableCell>
-                    <TableCell>{val.mobileNumber}</TableCell>
-                    <TableCell>{val.email}</TableCell>
-                    <TableCell>{val.mrnumber}</TableCell>
+                {filtered.map((val) => (
+                  <TableRow key={String(val.id ?? val.mrnumber) + val.email} className="cursor-pointer">
+                    <TableCell>
+                      <Link href={`/seeAll/${val.id}`} className="font-medium text-primary hover:underline">
+                        {val.name}
+                      </Link>
+                    </TableCell>
+                    <TableCell>
+                      <Link href={`/seeAll/${val.id}`} className="block">
+                        {val.mobileNumber}
+                      </Link>
+                    </TableCell>
+                    <TableCell>
+                      <Link href={`/seeAll/${val.id}`} className="block">
+                        {val.email}
+                      </Link>
+                    </TableCell>
+                    <TableCell>
+                      <Link href={`/seeAll/${val.id}`} className="block font-mono">
+                        {val.mrnumber}
+                      </Link>
+                    </TableCell>
                   </TableRow>
                 ))}
               </TableBody>

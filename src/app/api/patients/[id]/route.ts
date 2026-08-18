@@ -17,6 +17,7 @@ export async function GET(
     where: { id },
     include: {
       account: { select: { id: true, email: true } },
+      tests: true,
       files: {
         include: { category: true },
         orderBy: { fileDate: "desc" },

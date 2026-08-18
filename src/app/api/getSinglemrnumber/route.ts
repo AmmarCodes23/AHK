@@ -12,24 +12,46 @@ export async function POST(request: Request) {
   }
 
   const { email, name, mobileNumber } = await request.json();
+  const emailValue = String(email ?? "").trim();
+  const nameValue = String(name ?? "").trim();
+  const mobileValue = String(mobileNumber ?? "").trim();
+
+  if (!emailValue && !nameValue && !mobileValue) {
+    return NextResponse.json({
+      failure: "Enter a name, email, or mobile number",
+      patients: [],
+    });
+  }
+
   try {
-    const found = await prisma.patient.findFirst({
+    const found = await prisma.patient.findMany({
       where: {
-        email: String(email),
-        name: String(name),
-        mobileNumber: String(mobileNumber),
+        AND: [
+          nameValue ? { name: { contains: nameValue, mode: "insensitive" } } : {},
+          emailValue ? { email: { contains: emailValue, mode: "insensitive" } } : {},
+          mobileValue ? { mobileNumber: { contains: mobileValue } } : {},
+        ],
       },
       include: { tests: true },
+      orderBy: { name: "asc" },
+      take: 50,
     });
-    if (found) {
-      return NextResponse.json(serializePatient(found));
+
+    if (found.length === 0) {
+      return NextResponse.json({
+        err: "User Not Found",
+        failure: "User Not Found",
+        patients: [],
+      });
     }
+
+    const patients = found.map(serializePatient);
     return NextResponse.json({
-      err: "User Not Found",
-      failure: "User Not Found",
+      patients,
+      mrnumber: patients.length === 1 ? patients[0].mrnumber : undefined,
     });
   } catch (err) {
     const message = err instanceof Error ? err.message : "An Error Ocurred";
-    return NextResponse.json({ err: message, failure: "An Error Ocurred" });
+    return NextResponse.json({ err: message, failure: "An Error Ocurred", patients: [] });
   }
 }

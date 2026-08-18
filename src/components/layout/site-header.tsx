@@ -59,7 +59,13 @@ const navLinks = [
 function CartButton() {
   const { book } = useCart();
   return (
-    <Button variant="ghost" size="icon" nativeButton={false} render={<Link href="/book" />}>
+    <Button
+      variant="ghost"
+      size="icon"
+      className="relative"
+      nativeButton={false}
+      render={<Link href="/book" />}
+    >
       <ShoppingCart />
       <span className="sr-only">Booking cart</span>
       {book.length > 0 ? (
@@ -244,12 +250,12 @@ export default function SiteHeader() {
           </NavigationMenu>
         </nav>
 
-        <div className="relative hidden items-center gap-1 md:flex">
+        <div className="hidden items-center gap-1 md:flex">
           <CartButton />
           <AccountMenu />
         </div>
 
-        <div className="relative flex items-center gap-1 md:hidden">
+        <div className="flex items-center gap-1 md:hidden">
           <CartButton />
           <Sheet open={open} onOpenChange={setOpen}>
             <SheetTrigger render={<Button variant="ghost" size="icon" />}>

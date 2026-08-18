@@ -11,8 +11,15 @@ const inter = Inter({
 });
 
 export const metadata: Metadata = {
-  title: "AHK Portal",
+  title: "AHK Diagnostics",
   description: "AHK Portable X-Ray and Diagnostic",
+  icons: {
+    icon: [
+      { url: "/favicon.ico", sizes: "48x48" },
+      { url: "/favicon.png", type: "image/png" },
+    ],
+    apple: "/apple-icon.png",
+  },
 };
 
 export default function RootLayout({ children }: LayoutProps<"/">) {
